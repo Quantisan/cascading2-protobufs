@@ -24,33 +24,14 @@ public class ExpandProto<T extends Message> extends BaseOperation implements Fun
 
   private transient Descriptors.FieldDescriptor[] fieldDescriptorsToExtract;
 
-  private static <T extends Message> String[] getAllFields(Class<T> messageClass) {
-    try {
-      Method m = messageClass.getMethod("newBuilder");
-      Message.Builder builder = (Message.Builder) m.invoke(new Object[]{});
-
-      List<String> fieldNames = new ArrayList<String>();
-      for (Descriptors.FieldDescriptor fieldDesc : builder.getDescriptorForType().getFields()) {
-        fieldNames.add(fieldDesc.getName());
-      }
-      return fieldNames.toArray(new String[fieldNames.size()]);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    } catch (NoSuchMethodException e) {
-      throw new RuntimeException(e);
-    } catch (InvocationTargetException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   /** Expand the entire struct, using the same field names as they are found in the struct. */
   public ExpandProto(Class<T> messageClass) {
-    this(messageClass, getAllFields(messageClass));
+    this(messageClass, Util.getAllFields(messageClass));
   }
 
   /** Expand the entire struct, using the supplied field names to name the resultant fields. */
   public ExpandProto(Class<T> messageClass, Fields fieldDeclaration) {
-    this(messageClass, fieldDeclaration, getAllFields(messageClass));
+    this(messageClass, fieldDeclaration, Util.getAllFields(messageClass));
   }
 
   /**
