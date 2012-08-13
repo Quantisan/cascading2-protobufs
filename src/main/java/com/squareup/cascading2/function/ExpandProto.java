@@ -9,10 +9,6 @@ import cascading.tuple.Tuple;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.squareup.cascading2.util.Util;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA. User: duxbury Date: 8/6/12 Time: 11:31 AM To change this template use
@@ -74,35 +70,9 @@ public class ExpandProto<T extends Message> extends BaseOperation implements Fun
 
   @Override public void operate(FlowProcess flowProcess, FunctionCall functionCall) {
     T arg = (T) functionCall.getArguments().getObject(0);
-    Tuple result = new Tuple();
 
-    for (Descriptors.FieldDescriptor fieldDescriptor : getFieldDescriptorsToExtract()) {
-      if (arg.hasField(fieldDescriptor)) {
-        Object fieldValue = arg.getField(fieldDescriptor);
-        if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.ENUM) {
-          Descriptors.EnumValueDescriptor valueDescriptor =
-              (Descriptors.EnumValueDescriptor) fieldValue;
-          fieldValue = valueDescriptor.getNumber();
-        }
-        result.add(fieldValue);
-      } else {
-        result.add(null);
-      }
-    }
+    Tuple result = Util.expandMessage(this.fieldDescriptorsToExtract, this.messageClassName, this.fieldsToExtract, arg);
+
     functionCall.getOutputCollector().add(result);
-  }
-
-  private Descriptors.FieldDescriptor[] getFieldDescriptorsToExtract() {
-    if (fieldDescriptorsToExtract == null) {
-      Message.Builder builder = Util.builderFromMessageClass(messageClassName);
-
-      List <Descriptors.FieldDescriptor> fieldDescriptors = new ArrayList<Descriptors.FieldDescriptor>();
-      for (int i = 0; i < fieldsToExtract.length; i++) {
-        fieldDescriptors.add(builder.getDescriptorForType().findFieldByName(fieldsToExtract[i]));
-      }
-
-      fieldDescriptorsToExtract = fieldDescriptors.toArray(new Descriptors.FieldDescriptor[fieldDescriptors.size()]);
-    }
-    return fieldDescriptorsToExtract;
   }
 }

@@ -1,5 +1,7 @@
 package com.squareup.cascading2.util;
 
+import cascading.tuple.Tuple;
+
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import java.lang.reflect.InvocationTargetException;
@@ -47,5 +49,43 @@ public final class Util {
 	    } catch (InvocationTargetException e) {
 	      throw new RuntimeException(e);
 	    }
+  }
+  
+  public static Tuple expandMessage(Descriptors.FieldDescriptor[] fieldDescriptorsToExtract, 
+		  String messageClassName, String[] fieldsToExtract, Message msg) {
+	  Tuple result = new Tuple();
+	  
+	  for (Descriptors.FieldDescriptor fieldDescriptor : getFieldDescriptorsToExtract(fieldDescriptorsToExtract, messageClassName, fieldsToExtract)) 
+	  {
+		  if (msg.hasField(fieldDescriptor)) {
+			  Object fieldValue = msg.getField(fieldDescriptor);
+			  if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.ENUM) {
+				  Descriptors.EnumValueDescriptor valueDescriptor =
+						  (Descriptors.EnumValueDescriptor) fieldValue;
+				  fieldValue = valueDescriptor.getNumber();
+			  }
+			  result.add(fieldValue);
+		  } else {
+			  result.add(null);
+		  }
+	  }
+	  return result;
+  }
+  
+  private static Descriptors.FieldDescriptor[] 
+		  getFieldDescriptorsToExtract(Descriptors.FieldDescriptor[] fieldDescriptorsToExtract,
+				  String messageClassName, String[] fieldsToExtract) 
+  {
+	  if (fieldDescriptorsToExtract == null) {
+		  Message.Builder builder = Util.builderFromMessageClass(messageClassName);
+
+		  List <Descriptors.FieldDescriptor> fieldDescriptors = new ArrayList<Descriptors.FieldDescriptor>();
+		  for (int i = 0; i < fieldsToExtract.length; i++) {
+			  fieldDescriptors.add(builder.getDescriptorForType().findFieldByName(fieldsToExtract[i]));
+		  }
+
+		  fieldDescriptorsToExtract = fieldDescriptors.toArray(new Descriptors.FieldDescriptor[fieldDescriptors.size()]);
+	  }
+	  return fieldDescriptorsToExtract;
   }
 }
