@@ -59,7 +59,6 @@ public class ExpandProto<T extends Message> extends BaseOperation implements Fun
 
     Message.Builder builder = Util.builderFromMessageClass(messageClass.getName());
 
-    List <Descriptors.FieldDescriptor> fieldDescriptors = new ArrayList<Descriptors.FieldDescriptor>();
     for (int i = 0; i < fieldsToExtract.length; i++) {
       if (builder.getDescriptorForType().findFieldByName(fieldsToExtract[i]) == null) {
         throw new IllegalArgumentException("Could not find a field named '"
